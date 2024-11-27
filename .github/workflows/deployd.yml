@@ -26,11 +26,26 @@ jobs:
       # Desplegar el código en la instancia EC2
       - name: Deploy to EC2
         run: |
-          ssh -i ~/.ssh/id_rsa ubuntu@ec2-3-86-231-169.compute-1.amazonaws.com << 'EOF'
+          ssh -i ~/.ssh/id_rsa ubuntu@ec2-3-80-133-50.compute-1.amazonaws.com << 'EOF'
+            # Navegar al directorio del proyecto
             cd /home/ubuntu/project2.25-11-2024
-            git pull origin main
-            git status  # Verificar el estado del repositorio
+            # Asegurarse de tener los últimos cambios
+            git fetch origin
+            git reset --hard origin/main  # Esto asegura que no haya cambios no deseados
+
+            # Verificar el estado del repositorio
+            git status
+
+            # Instalar dependencias de npm
             npm install
+
+            # Usar PM2 para iniciar/reiniciar el servidor
+            pm2 stop project2.25-11-2024 || true  # Detener la aplicación si está corriendo
             pm2 start index.js --name "project2.25-11-2024" || pm2 restart "project2.25-11-2024"
+            
+            # Guardar los cambios en PM2
             pm2 save
+
+            # Asegurarse de que el servidor esté en ejecución
+            pm2 list
           EOF
