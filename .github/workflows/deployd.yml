@@ -22,7 +22,7 @@ jobs:
 
       - name: Build and push hello-service
         run: |
-          docker build ./hello-service -f ./hello-service/Dockerfile -t ${{ secrets.DOCKER_HUB_USERNAME }}/hello-service:latest
+          docker build ./hello-service -f ./Dockerfile -t ${{ secrets.DOCKER_HUB_USERNAME }}/hello-service:latest
           docker push ${{ secrets.DOCKER_HUB_USERNAME }}/hello-service:latest
 
   
