@@ -1,51 +1,28 @@
-name: Deploy to EC2
+name: Build and Push Docker Images
 
 on:
   push:
     branches:
-      - main
+      - docker
 
 jobs:
-  deploy:
-    name: Deploy to EC2
+  build-and-push:
+    name: Build and Push Docker Images
     runs-on: ubuntu-latest
 
     steps:
-      # Checkout del código fuente
-      - name: Checkout code
-        uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v2
 
-      # Configurar el acceso SSH
-      - name: Set up SSH
+      - name: Login to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_PASSWORD }}
+
+      - name: Build and push hello-service
         run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -H ec2-44-203-121-218.compute-1.amazonaws.com >> ~/.ssh/known_hosts
+          docker build ./hello-service -f ./hello-service/Dockerfile -t ${{ secrets.DOCKER_HUB_USERNAME }}/hello-service:latest
+          docker push ${{ secrets.DOCKER_HUB_USERNAME }}/hello-service:latest
 
-      # Desplegar el código en la instancia EC2
-      - name: Deploy to EC2
-        run: |
-          ssh -i ~/.ssh/id_rsa ubuntu@ec2-44-203-121-218.compute-1.amazonaws.com << 'EOF'
-            # Navegar al directorio del proyecto
-            cd /home/ubuntu/project2.25-11-2024
-            # Asegurarse de tener los últimos cambios
-            git fetch origin
-            git reset --hard origin/main  # Esto asegura que no haya cambios no deseados
-
-            # Verificar el estado del repositorio
-            git status
-
-            # Instalar dependencias de npm
-            npm install
-
-            # Usar PM2 para iniciar/reiniciar el servidor
-            pm2 stop project2.25-11-2024 || true  # Detener la aplicación si está corriendo
-            pm2 start index.js --name "project2.25-11-2024" || pm2 restart "project2.25-11-2024"
-            
-            # Guardar los cambios en PM2
-            pm2 save
-
-            # Asegurarse de que el servidor esté en ejecución
-            pm2 list
-          EOF
+  
