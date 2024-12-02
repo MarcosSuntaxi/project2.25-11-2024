@@ -1,0 +1,52 @@
+name: Deploy to EC2
+
+on:
+  push:
+    branches:
+      - main
+      - docker
+
+jobs:
+  deploy:
+    name: Deploy to EC2
+    runs-on: ubuntu-latest
+
+    steps:
+      # Checkout del código fuente
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # Configurar el acceso SSH
+      - name: Set up SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ec2-54-144-56-135.compute-1.amazonaws.com >> ~/.ssh/known_hosts
+
+      # Desplegar el código en la instancia EC2
+      - name: Deploy to EC2
+        run: |
+          ssh -i ~/.ssh/id_rsa ubuntu@ec2-54-144-56-135.compute-1.amazonaws.com << 'EOF'
+            # Navegar al directorio del proyecto
+            cd /home/ubuntu/project2.25-11-2024
+            # Asegurarse de tener los últimos cambios
+            git fetch origin
+            git reset --hard origin/main  # Esto asegura que no haya cambios no deseados
+
+            # Verificar el estado del repositorio
+            git status
+
+            # Instalar dependencias de npm
+            npm install
+
+            # Usar PM2 para iniciar/reiniciar el servidor
+            pm2 stop project2.25-11-2024 || true  # Detener la aplicación si está corriendo
+            pm2 start index.js --name "project2.25-11-2024" || pm2 restart "project2.25-11-2024"
+            
+            # Guardar los cambios en PM2
+            pm2 save
+
+            # Asegurarse de que el servidor esté en ejecución
+            pm2 list
+          EOF
