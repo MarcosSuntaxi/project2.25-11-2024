@@ -40,10 +40,16 @@ jobs:
           echo "${{ secrets.EC2_SSH_KEY }}" > private.pem
           chmod 600 private.pem
 
-      - name: Deploy via SSH
+      - name: Deploy via SSH to multiple instances
         uses: appleboy/ssh-action@v0.1.6
         with:
-          host: ${{ secrets.EC2_PUBLIC_IP }}
+          host: |
+            ${{ secrets.EC2_PUBLIC_IP_1 }}
+            ${{ secrets.EC2_PUBLIC_IP_2 }}
+            ${{ secrets.EC2_PUBLIC_IP_3 }}
+            ${{ secrets.EC2_PUBLIC_IP_4 }}
+            ${{ secrets.EC2_PUBLIC_IP_5 }}
+            ${{ secrets.EC2_PUBLIC_IP_6 }}
           username: ubuntu
           key: ${{ secrets.EC2_SSH_KEY }}
           port: 22
