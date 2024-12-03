@@ -39,7 +39,11 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           port: 22
           script: |
+            # Detener y eliminar el contenedor si ya existe
+            sudo docker rm -f hello-service || true
+            # Descargar la nueva imagen
             sudo docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/hello-service:latest
+            # Ejecutar el nuevo contenedor
             sudo docker run -d --name hello-service -p 8081:8080 ${{ secrets.DOCKER_HUB_USERNAME }}/hello-service:latest
 
   validate-qa:
@@ -67,5 +71,9 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           port: 22
           script: |
+            # Detener y eliminar el contenedor si ya existe
+            sudo docker rm -f hello-service || true
+            # Descargar la nueva imagen
             sudo docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/hello-service:latest
+            # Ejecutar el nuevo contenedor
             sudo docker run -d --name hello-service -p 8081:8080 ${{ secrets.DOCKER_HUB_USERNAME }}/hello-service:latest
